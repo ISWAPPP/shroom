@@ -1,0 +1,21 @@
+# --- secrets & credentials (never commit) ---
+bridge.key
+.env
+secrets/
+letsencrypt/
+certbot-lib/
+certbot-logs/
+acme/
+managed-policy/*.local*
+
+# --- runtime state ---
+data/
+bridge-ipc/
+*.log
+discovery-session.json
+
+# --- build / caches ---
+__pycache__/
+*.pyc
+node_modules/
+frontend/dist/

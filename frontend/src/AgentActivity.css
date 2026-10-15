@@ -1,0 +1,22 @@
+.agent-activity{max-width:900px;margin:8px 0 20px;padding:0;border:1px solid var(--md-sys-color-outline-variant);border-radius:8px;background:var(--md-sys-color-surface-container);font-size:13px;min-width:0}
+.agent-activity summary{cursor:pointer;overflow-wrap:anywhere}
+.agent-activity .activity-summary{display:flex;align-items:center;gap:9px;padding:10px 12px;list-style:none;min-width:0}
+.activity-summary::-webkit-details-marker{display:none}
+.activity-summary::after{content:'';width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);flex-shrink:0;margin-left:3px}
+.agent-activity>details[open]>.activity-summary::after{transform:rotate(225deg)}
+.activity-summary strong{font-size:12px;font-weight:500;white-space:nowrap}
+.activity-current{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--md-sys-color-on-surface-variant)}
+.activity-count,.activity-summary time,.activity-state,.activity-step time{color:var(--md-sys-color-on-surface-variant);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.activity-indicator{width:7px;height:7px;border-radius:50%;background:var(--md-sys-color-on-surface-variant);flex-shrink:0}
+.activity-indicator.live{background:var(--md-sys-color-primary);animation:activity-pulse 1.6s ease-in-out infinite}
+@keyframes activity-pulse{50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){.activity-indicator.live{animation:none}}
+.agent-activity ol{list-style:none;padding:0 12px;margin:0;max-height:360px;overflow:auto;overscroll-behavior:contain}
+.agent-activity li{padding:12px 0;border-top:1px solid var(--md-sys-color-outline-variant)}
+.activity-step{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.activity-step strong{overflow-wrap:anywhere;min-width:0;flex:1}
+.agent-activity .running .activity-state{color:var(--md-sys-color-primary)}
+.agent-activity li p{margin:6px 0;line-height:1.5;overflow-wrap:anywhere}
+.agent-activity pre{max-height:260px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0;padding:10px;border-radius:8px;background:var(--md-sys-color-surface);font-size:12px}
+.agent-activity>.hint,.agent-activity>details>.hint{padding:0 12px}
+@media(max-width:700px){.activity-summary{flex-wrap:wrap}.activity-current{flex-basis:45%}.activity-step{gap:6px}.activity-state{flex-basis:100%}}

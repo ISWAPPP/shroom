@@ -1,0 +1,13 @@
+.agent-editor{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;min-width:0}
+.agent-editor .card{min-width:0;max-width:100%;box-sizing:border-box}
+.agent-editor .row.grow{flex-wrap:wrap}
+.agent-editor .row.grow>label{min-width:0;flex:1 1 180px}
+.agent-editor input[type=number]{width:100%;min-width:0}
+.agent-editor .actions>button{max-width:100%;height:auto!important;min-height:36px;white-space:normal}
+.agent-document-label{display:flex;flex-direction:column;gap:8px}
+.agent-document-text{width:100%;box-sizing:border-box;min-height:280px;max-height:55vh;resize:vertical;overflow:auto;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;line-height:1.6;padding:12px;white-space:pre-wrap;tab-size:2}
+.agent-document-meta{justify-content:space-between;flex-wrap:wrap;gap:8px;margin:8px 0}
+.agent-editor .actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:12px}
+.agent-editor .tabs{overflow-x:auto;flex-wrap:nowrap}
+.agent-editor .tabs button{flex-shrink:0}
+@media(max-width:700px){.agent-document-text{min-height:220px}.agent-document-meta{align-items:flex-start}}

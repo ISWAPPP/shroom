@@ -1,0 +1,7 @@
+[Unit]
+Description=Renew portal TLS certificate (certbot in Docker)
+Requires=docker.service
+After=docker.service network-online.target
+[Service]
+Type=oneshot
+ExecStart=/srv/hermes-web/renew.sh

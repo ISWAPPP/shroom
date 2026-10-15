@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# One-shot: restart every portal bridge as soon as its profile has no running/waiting turn (checked twice, 30 s apart).
+# Picks up bridge.py / profile_admin.py changes without cutting an answer in progress. Gives up after 3 hours.
+set -u
+active() { docker exec hermes-web-backend python -c "
+import sqlite3,time,sys;c=sqlite3.connect('/data/portal.db')
+print(c.execute(\"select count(*) from turns t join dialogs d on d.id=t.dialog where d.profile=? and t.state in ('running','waiting')\",(sys.argv[1],)).fetchone()[0])" "$1" 2>/dev/null || echo 1; }
+pending=$(systemctl list-units 'hermes-web-bridge*' --no-legend --state=active | awk '{print $1}')
+end=$(( $(date +%s) + 10800 ))
+while [ -n "$pending" ] && [ "$(date +%s)" -lt "$end" ]; do
+  left=""
+  for u in $pending; do
+    p=${u#hermes-web-bridge@}; p=${p%.service}; [ "$u" = hermes-web-bridge.service ] && p=default
+    if [ "$(active "$p")" = 0 ]; then sleep 30
+      if [ "$(active "$p")" = 0 ]; then systemctl restart "$u" && echo "$(date -Is) restarted $u"; continue; fi
+    fi
+    left="$left $u"
+  done
+  pending=$left; [ -n "$pending" ] && sleep 20
+done
+[ -z "$pending" ] && echo "all bridges restarted" || echo "gave up, still busy:$pending"

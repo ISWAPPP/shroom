@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Daily portal backup: consistent SQLite copy + code/config archive (no node_modules/dist/sockets). Keeps 14 days.
+set -euo pipefail
+D=/srv/hermes-web-backups/daily; mkdir -p "$D"; chmod 700 /srv/hermes-web-backups "$D"
+T=$(date +%Y%m%d-%H%M)
+docker exec hermes-web-backend python -c "import sqlite3;sqlite3.connect('/data/portal.db').backup(sqlite3.connect('/data/.backup.db'))"
+mv /srv/hermes-web/data/.backup.db "$D/portal-$T.db"
+tar --exclude=node_modules --exclude=dist --exclude=bridge-ipc --exclude='data/*.db' --exclude='data/files' -czf "$D/code-$T.tgz" -C /srv hermes-web
+/usr/local/sbin/shared-skills-autocommit || true   # snapshot pending agent edits into git first
+tar -czf "$D/shared-skills-$T.tgz" -C /root/.hermes shared-skills   # includes .git history
+chmod 600 "$D"/*
+find "$D" -type f -mtime +14 -delete
+sqlite3_ok=$(python3 -c "import sqlite3;print(sqlite3.connect('$D/portal-$T.db').execute('pragma integrity_check').fetchone()[0])")
+echo "backup $T db=$sqlite3_ok $(du -sh "$D" | cut -f1)"
+[ "$sqlite3_ok" = ok ]

@@ -1,0 +1,10 @@
+const React=require('react'),{renderToStaticMarkup}=require('react-dom/server'),assert=require('node:assert/strict'),{applyActivity,AgentActivity}=require(process.env.ACTIVITY_BUNDLE);
+const start={type:'tool.start',payload:{tool_id:'a',name:'terminal',context:'Перевіряємо тести'}};
+let steps=applyActivity([], [start,start],1000);assert.equal(steps.length,1);assert.equal(steps[0].finished,undefined);
+steps=applyActivity(steps,[{type:'tool.complete',payload:{tool_id:'a',name:'terminal',duration_s:5,result_text:'PASS'}}],6000);assert.equal(steps[0].duration,5);assert.equal(steps[0].result,'PASS');
+let html=renderToStaticMarkup(React.createElement(AgentActivity,{steps,busy:false,state:'complete',connected:true}));assert.ok(html.includes('Виконання завершено'));assert.ok(html.includes('Результат кроку'));assert.ok(html.includes('PASS'));
+html=renderToStaticMarkup(React.createElement(AgentActivity,{steps,busy:true,state:'waiting',connected:true}));assert.ok(html.includes('Потрібна ваша відповідь'));
+html=renderToStaticMarkup(React.createElement(AgentActivity,{steps,busy:true,state:'running',connected:false}));assert.ok(html.includes('Звʼязок відновлюється'));
+steps=applyActivity([],Array.from({length:110},(_,i)=>({type:'tool.start',payload:{tool_id:String(i),name:'test'}})),0);assert.equal(steps.length,100);
+const fallback=applyActivity([],[{type:'tool.complete',payload:{tool_id:'fallback',name:'terminal',result:{output:'actual output'}}}],1000);assert.ok(fallback[0].result.includes('actual output'));
+console.log('PASS: activity deduplication, completion, duration, result rendering, waiting/reconnect states and bounded history');

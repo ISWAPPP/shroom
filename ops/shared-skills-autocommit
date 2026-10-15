@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Commit any change in the shared skill library (agent edits from every profile land here).
+# History: git -C /root/.hermes/shared-skills log --stat ; revert one skill: git checkout <rev> -- <dir>
+set -euo pipefail
+R=/root/.hermes/shared-skills
+cd "$R"
+[ -d .git ] || { echo "no git repo in $R"; exit 1; }
+git add -A
+git diff --cached --quiet && exit 0
+# Name each change by its skill directory (nearest parent holding SKILL.md, also for deleted files).
+skills=$(git diff --cached --name-only | while read -r f; do
+  d=$(dirname "$f")
+  while [ "$d" != . ] && [ ! -e "$d/SKILL.md" ] && ! git cat-file -e "HEAD:$d/SKILL.md" 2>/dev/null; do d=$(dirname "$d"); done
+  [ "$d" = . ] && d=$f; echo "$d"
+done | sort -u | paste -sd, -)
+git commit -q -m "auto: ${skills:0:200}" -m "$(git diff --cached --stat | tail -30)"
+echo "committed $(git rev-parse --short HEAD): ${skills}"

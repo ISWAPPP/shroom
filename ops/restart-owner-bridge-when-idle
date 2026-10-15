@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# One-shot: restart the OWNER bridge (default profile) once no default-profile turn is really active, so profile_admin.py
+# changes load without cutting an answer. "Really active" is asked from Hermes itself (session.status / open requests),
+# because a portal turn row stays 'running' until a browser polls it. Checked twice, 20 s apart. Gives up after 3 hours.
+# Optional: AFTER="command" runs once the bridge answers again (e.g. an acceptance suite), output to ops/last-after.log.
+set -u
+cd "$(dirname "$0")/.."
+busy() { /usr/bin/python3 - <<'EOF'
+import sqlite3,json,subprocess
+c=sqlite3.connect('data/portal.db')
+rows=c.execute("select d.live from turns t join dialogs d on d.id=t.dialog where d.profile='default' and t.state in ('running','waiting')").fetchall()
+tok=open('bridge.key').read().strip()
+def call(path,body):
+    out=subprocess.run(['curl','-s','-m','10','--unix-socket','bridge-ipc/bridge.sock','-H','Authorization: Bearer '+tok,'-H','Content-Type: application/json','-d',json.dumps(body),'http://x'+path],capture_output=True,text=True).stdout
+    return json.loads(out or '{}')
+n=0
+for (live,) in rows:
+    st=call('/rpc',{'method':'session.status','params':{'session_id':live}}).get('result',{}).get('output','')
+    ev=call('/events',{'session_id':live,'after':10**12})
+    if 'Agent Running: Yes' in st or ev.get('open_requests'): n+=1
+print(n)
+EOF
+}
+end=$(( $(date +%s) + 10800 ))
+while [ "$(date +%s)" -lt "$end" ]; do
+  if [ "$(busy)" = 0 ]; then sleep 20
+    if [ "$(busy)" = 0 ]; then
+      systemctl restart hermes-web-bridge.service && echo "$(date -Is) restarted owner bridge"
+      for i in $(seq 1 60); do [ -S bridge-ipc/bridge.sock ] && curl -s -m 5 --unix-socket bridge-ipc/bridge.sock -o /dev/null http://x/ && break; sleep 2; done
+      sleep 10
+      [ -n "${AFTER:-}" ] && bash -c "$AFTER" > ops/last-after.log 2>&1
+      exit 0
+    fi
+  fi
+  sleep 20
+done
+echo "gave up: owner profile still busy"

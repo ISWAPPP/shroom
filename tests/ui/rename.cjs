@@ -1,0 +1,9 @@
+const {JSDOM}=require('jsdom');const dom=new JSDOM('<div id="root"></div>',{url:'https://example.test'});Object.assign(global,{window:dom.window,document:dom.window.document,localStorage:dom.window.localStorage,HTMLElement:dom.window.HTMLElement,IS_REACT_ACT_ENVIRONMENT:true});
+const React=require('react'),{act}=React,{createRoot}=require('react-dom/client'),assert=require('node:assert/strict'),{ChatList}=require(process.env.CHAT_LIST_BUNDLE);
+(async()=>{let reject,calls=0;const root=createRoot(document.getElementById('root'));await act(async()=>root.render(React.createElement(ChatList,{dialogs:[{id:'one',title:'Стара назва',last:Date.now()/1000}],active:'one',busy:false,onOpen:()=>{},onRename:()=>{calls++;return new Promise((_,r)=>reject=r)},onDelete:()=>{}})));
+await act(async()=>document.querySelector('.kebab').click());await act(async()=>document.querySelector('[role=menuitem]').click());const input=document.querySelector('.chat-rename');
+await act(async()=>{Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set.call(input,'Нова назва');input.dispatchEvent(new window.Event('input',{bubbles:true}));});
+await act(async()=>input.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Enter',bubbles:true})));assert.equal(calls,1);assert.ok(input.readOnly);
+await act(async()=>{input.blur();input.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));});assert.equal(calls,1);
+await act(async()=>reject(new Error('Не вдалося зберегти')));assert.equal(document.querySelector('[role=alert]').textContent,'Не вдалося зберегти');assert.equal(input.value,'Нова назва');assert.equal(input.readOnly,false);assert.equal(document.activeElement,input);
+await act(async()=>root.unmount());console.log('PASS: rename single submission, pending state, preserved draft and focus after failure');})().catch(e=>{console.error(e);process.exitCode=1});

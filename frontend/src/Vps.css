@@ -1,0 +1,87 @@
+/* Admin dashboard: VPS resources card (Vps.tsx). Colours come from the palette roles, so every theme applies. */
+.card.vps{gap:16px;transition:opacity .2s}
+.card.vps.stale .vps-gauges,.card.vps.stale .vps-charts{opacity:.55}
+.vps-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.vps-head h3{margin:0}
+.vps-head .hint{margin:2px 0 0}
+.vps-range button{height:32px!important;min-width:0;padding:0 12px;font-size:13px}
+.vps-range button.on{background:var(--md-sys-color-secondary-container)!important;color:var(--md-sys-color-on-secondary-container)}
+
+/* fill gauges */
+.vps-gauges{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.vps-gauge{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;min-width:0;padding:12px;border-radius:12px;border:1px solid var(--md-sys-color-outline-variant);background:var(--md-sys-color-surface-container)}
+.vps-gauge svg{flex:none;width:112px;height:112px;margin-bottom:-14px}
+.vps-gauge circle{fill:none;stroke-width:9;stroke-linecap:round}
+.vps-gauge .track{stroke:var(--md-sys-color-surface-container-highest)}
+.vps-gauge .fill{stroke:var(--md-sys-color-primary);transition:stroke-dasharray .6s ease}
+.vps-gauge.warm .fill{stroke:var(--md-sys-color-tertiary)}
+.vps-gauge.hot .fill{stroke:var(--md-sys-color-error)}
+.vps-gauge.hot .val{fill:var(--md-sys-color-error)}
+.vps-gauge .val{font:600 20px 'Inter Variable',sans-serif;fill:var(--md-sys-color-on-surface);text-anchor:middle;letter-spacing:-.02em}
+.vps-gauge .lbl{font:500 9.5px 'Inter Variable',sans-serif;fill:var(--md-sys-color-on-surface-variant);text-anchor:middle}
+.vps-gauge-text{display:flex;flex-direction:column;gap:4px;min-width:0}
+.vps-gauge-text b{font-size:14px;line-height:20px;font-weight:600;color:var(--md-sys-color-on-surface)}
+.vps-gauge-text span{font-size:12px;line-height:16px;color:var(--md-sys-color-on-surface-variant)}
+.vps-net{align-items:stretch;justify-content:center;gap:14px;text-align:left}
+.vps-plot{position:relative;min-width:0}
+.vps-io{display:flex;flex-direction:column;gap:2px}
+.vps-io span{font-size:12px;color:var(--md-sys-color-on-surface-variant)}
+.vps-io b{font-size:14px;line-height:20px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--md-sys-color-on-surface)}
+.vps-disks{display:flex;flex-direction:column;gap:8px}
+.vps-psi{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin:0}
+.vps-psi span{padding:2px 8px;border-radius:999px;background:var(--md-sys-color-surface-container-highest);color:var(--md-sys-color-on-surface);font-variant-numeric:tabular-nums}
+.vps-psi span.warm{background:color-mix(in srgb,var(--md-sys-color-tertiary) 25%,transparent)}
+.vps-psi span.hot{background:color-mix(in srgb,var(--md-sys-color-error) 25%,transparent);color:var(--md-sys-color-error)}
+
+/* charts */
+.vps-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:820px){.vps-charts{grid-template-columns:minmax(0,1fr)}}
+.vps-chart{position:relative;min-width:0;padding:12px 12px 6px;border-radius:12px;border:1px solid var(--md-sys-color-outline-variant);background:var(--md-sys-color-surface-container)}
+.vps-chart-head{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:6px;font-size:13px;color:var(--md-sys-color-on-surface-variant)}
+.vps-chart-head b{color:var(--md-sys-color-on-surface);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.vps-chart svg{display:block;overflow:visible;cursor:crosshair}
+.vps-chart .grid{stroke:var(--md-sys-color-outline-variant);stroke-width:1;stroke-dasharray:2 4}
+.vps-chart .axis{font:11px 'Inter Variable',sans-serif;fill:var(--md-sys-color-on-surface-variant);font-variant-numeric:tabular-nums}
+.vps-chart .line{fill:none;stroke-width:1.75;stroke-linejoin:round;stroke-linecap:round}
+.vps-chart .line.faint{stroke-width:1;opacity:.45;stroke-dasharray:3 3}
+.vps-chart .area{stroke:none;opacity:.16}
+.vps-chart .cross{stroke:var(--md-sys-color-on-surface-variant);stroke-width:1;opacity:.5}
+.vps-chart .dot{stroke:var(--md-sys-color-surface-container);stroke-width:2}
+.vps-chart .s1 .line{stroke:var(--md-sys-color-primary)}.vps-chart .s1 .area,.vps-chart .dot.s1{fill:var(--md-sys-color-primary)}
+.vps-chart .s2 .line{stroke:var(--md-sys-color-tertiary)}.vps-chart .s2 .area,.vps-chart .dot.s2{fill:var(--md-sys-color-tertiary)}
+.vps-chart .s3 .line{stroke:var(--md-sys-color-error)}.vps-chart .s3 .area,.vps-chart .dot.s3{fill:var(--md-sys-color-error)}
+.vps-tip{position:absolute;top:34px;width:170px;padding:8px 10px;border-radius:8px;pointer-events:none;z-index:2;font-size:12px;line-height:18px;
+  background:var(--md-sys-color-surface-container-highest);color:var(--md-sys-color-on-surface);box-shadow:0 4px 16px rgb(0 0 0/.25)}
+.vps-tip>div{display:flex;align-items:center;gap:6px}
+.vps-tip b{margin-left:auto;font-variant-numeric:tabular-nums}
+.vps-tip .meta{color:var(--md-sys-color-on-surface-variant)}
+.sw{display:inline-block;flex:none;width:8px;height:8px;border-radius:2px}
+.sw.s1{background:var(--md-sys-color-primary)}.sw.s2{background:var(--md-sys-color-tertiary)}.sw.s3{background:var(--md-sys-color-error)}
+
+/* who uses the memory */
+.vps-consumers{display:flex;flex-direction:column;gap:10px}
+.vps-consumers h4{margin:0}
+.vps-stack{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--md-sys-color-surface-container-highest)}
+.vps-stack i{display:block;height:100%;min-width:2px;transition:width .6s ease}
+.vps-stack i+i{box-shadow:inset 2px 0 0 var(--md-sys-color-surface-container-low)}
+.g-bridges{background:var(--md-sys-color-primary)!important}
+.g-sandboxes{background:var(--md-sys-color-tertiary)!important}
+.g-portal{background:var(--md-sys-color-secondary)!important}
+.g-system{background:var(--md-sys-color-outline)!important}
+.g-other{background:var(--md-sys-color-outline-variant)!important}
+.sw.free{background:var(--md-sys-color-surface-container-highest);outline:1px solid var(--md-sys-color-outline-variant)}
+.vps-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--md-sys-color-on-surface-variant)}
+.vps-legend span{display:inline-flex;align-items:center;gap:6px}
+.vps-legend b{color:var(--md-sys-color-on-surface);font-weight:600;font-variant-numeric:tabular-nums}
+.vps-units{width:100%}
+.vps-units th{text-align:left;font-weight:500;font-size:12px;color:var(--md-sys-color-on-surface-variant)}
+.vps-units .num{text-align:right;width:1%;font-variant-numeric:tabular-nums}
+.vps-units .meta{font-size:12px;color:var(--md-sys-color-on-surface-variant)}
+.vps-membar{width:45%}
+.vps-membar{display:table-cell}
+.vps-membar .bar{display:inline-block;vertical-align:middle;width:calc(100% - 76px);margin:0 8px 0 0;height:6px;border-radius:3px}
+.vps-membar .bar i{border-radius:3px}
+.vps-membar span{display:inline-block;width:68px;text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
+@media(max-width:600px){.vps-membar .bar{display:none}.vps-membar{width:auto}}
+.card .vps-units td:first-child{white-space:normal;overflow-wrap:break-word}
+@media(max-width:600px){.vps-units .meta{display:block}.vps-membar span{width:auto}.vps-gauges{grid-template-columns:minmax(0,1fr)}}

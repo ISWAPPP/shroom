@@ -1,0 +1,18 @@
+[Unit]
+Description=Shroom admin host (portal host operations, no Hermes agent)
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/srv/hermes-web
+Environment=PATH=/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=PYTHONUNBUFFERED=1
+# same environment the owner bridge gave these ops before (hermes CLI reads provider settings from it)
+EnvironmentFile=/root/.hermes/.env
+ExecStart=/usr/bin/python3 /srv/hermes-web/admin_host.py
+Restart=always
+RestartSec=2
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

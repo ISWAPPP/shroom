@@ -1,0 +1,13 @@
+[Unit]
+Description=Hermes portal stdio bridge
+After=network.target
+[Service]
+User=root
+WorkingDirectory=/srv/hermes-web
+Environment=PATH=/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EnvironmentFile=/root/.hermes/.env
+ExecStart=/usr/bin/python3 /srv/hermes-web/bridge.py
+Restart=on-failure
+UMask=0077
+[Install]
+WantedBy=multi-user.target

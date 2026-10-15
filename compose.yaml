@@ -1,0 +1,117 @@
+{
+  "services": {
+    "proxy": {
+      "image": "nginx@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94",
+      "container_name": "hermes-web-proxy",
+      "restart": "unless-stopped",
+      "ports": [
+        "80:80",
+        "443:443"
+      ],
+      "volumes": [
+        "./nginx:/etc/nginx/templates:ro",
+        "./acme:/var/www/acme:ro",
+        "./letsencrypt:/etc/letsencrypt:ro"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "logging": {
+        "driver": "json-file",
+        "options": {
+          "max-size": "10m",
+          "max-file": "3"
+        }
+      },
+      "mem_limit": "128m",
+      "environment": {
+        "PORTAL_HOST": "${PORTAL_HOST:?set PORTAL_HOST in .env}"
+      }
+    },
+    "certbot": {
+      "image": "certbot/certbot@sha256:f70ad0adbb7e117f0fe42a63c553f28ea451edabc0148757b6efcd9735acaa20",
+      "profiles": [
+        "maintenance"
+      ],
+      "volumes": [
+        "./acme:/var/www/acme",
+        "./letsencrypt:/etc/letsencrypt",
+        "./certbot-lib:/var/lib/letsencrypt",
+        "./certbot-logs:/var/log/letsencrypt"
+      ]
+    },
+    "backend": {
+      "build": "./backend",
+      "container_name": "hermes-web-backend",
+      "restart": "unless-stopped",
+      "volumes": [
+        "./data:/data",
+        "./bridge-ipc:/run/bridge:ro",
+        "./bridge.key:/run/secrets/bridge_key:ro"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "cap_drop": [
+        "ALL"
+      ],
+      "read_only": true,
+      "tmpfs": [
+        "/tmp:size=32m"
+      ],
+      "logging": {
+        "driver": "json-file",
+        "options": {
+          "max-size": "10m",
+          "max-file": "3"
+        }
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/api/health',timeout=3)"
+        ],
+        "interval": "30s",
+        "timeout": "5s",
+        "retries": 3,
+        "start_period": "20s"
+      },
+      "mem_limit": "768m",
+      "environment": {
+        "PORTAL_HOST": "${PORTAL_HOST:?set PORTAL_HOST in .env}",
+        "PORTAL_ORIGIN": "${PORTAL_ORIGIN:-}"
+      }
+    },
+    "frontend": {
+      "build": "./frontend",
+      "container_name": "hermes-web-frontend",
+      "restart": "unless-stopped",
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "logging": {
+        "driver": "json-file",
+        "options": {
+          "max-size": "10m",
+          "max-file": "3"
+        }
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "wget",
+          "-q",
+          "-O",
+          "/dev/null",
+          "http://127.0.0.1/"
+        ],
+        "interval": "30s",
+        "timeout": "5s",
+        "retries": 3
+      },
+      "mem_limit": "128m"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+# Managed safety policy enforced on every portal bridge (stricter than profile smart mode).
+approvals:
+  mode: manual
+command_allowlist: []
+security:
+  redact_secrets: true

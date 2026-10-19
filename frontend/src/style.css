@@ -712,6 +712,12 @@ article.cron-report{border-left:3px solid var(--md-sys-color-primary);padding-le
 article.cron-report.failed{border-left-color:var(--md-sys-color-error)}
 article.cron-report>label,article.cron-notice>label{display:flex;align-items:center;gap:6px}
 article.cron-notice>div{color:var(--md-sys-color-on-surface-variant);font-size:13px}
+article.sys-notice{padding:0;margin:2px 0}
+.sys-notice .sys-notice-head{height:auto;min-height:28px;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--md-sys-shape-full);border:1px solid var(--md-sys-color-outline-variant);background:transparent;color:var(--md-sys-color-on-surface-variant);font:inherit;font-size:13px;cursor:pointer;max-width:100%}
+.sys-notice .sys-notice-head:hover{background:var(--md-sys-color-surface-container-high)}
+.sys-notice .sys-notice-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.sys-notice .sys-notice-chev{transition:transform .15s}.sys-notice .sys-notice-chev.open{transform:rotate(180deg)}
+.sys-notice .sys-notice-body{margin:6px 0 0;padding:8px 10px;max-height:320px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:18px;border-radius:8px;background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface-variant)}
 /* Composer while the agent works: split action button + compact stop, queued follow-ups above the field */
 .busy-actions{position:relative;display:flex;align-items:center;gap:6px}
 .busy-actions .split-btn{display:flex;align-items:stretch;flex-shrink:0}

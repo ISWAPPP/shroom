@@ -1134,7 +1134,7 @@ def run_command(did: str, body: Command, user=Depends(current_user)):
         last = ''
         if name == 'retry':
             hist = rpc(P, 'session.history', {'session_id': sid}).get('messages', [])
-            users = [m for m in hist if m.get('role') == 'user']
+            users = [m for m in hist if m.get('role') == 'user' and not _is_notice(m)]
             if users:
                 m = users[-1]
                 last = m.get('text') if isinstance(m.get('text'), str) else (m.get('content') if isinstance(m.get('content'), str) else '')
@@ -2941,7 +2941,10 @@ def _snapshot(did, user):
         if m.get('role') == 'user':
             t = t.split('\n--- Attached Context ---')[0].strip()
         if t:
-            out.append({'role': m['role'], 'text': redact(t, user), 'timestamp': m.get('timestamp')})
+            row = {'role': m['role'], 'text': redact(t, user), 'timestamp': m.get('timestamp')}
+            if _is_notice(m):
+                row['kind'] = m.get('display_kind') or 'process_complete'
+            out.append(row)
     return out
 
 
@@ -3020,7 +3023,9 @@ def copy_share(body: ShareCopy, token: str = FPath(..., pattern=r'^[A-Za-z0-9_-]
         raise HTTPException(413, 'Розмова завелика для повної копії: оберіть стиснення')
     enforce_limits(user)
     if body.compress:
-        transcript = '\n\n'.join(('USER' if m['role'] == 'user' else 'AGENT') + ': ' + m['text'] for m in msgs)[-400_000:]
+        transcript = '\n\n'.join(
+            ('SYSTEM' if _is_notice(m) else 'USER' if m['role'] == 'user' else 'AGENT') + ': ' + m['text'] for m in msgs
+        )[-400_000:]
         try:
             summary = (
                 rpc(
@@ -3172,7 +3177,9 @@ def generate_dialog_title(did: str, user=Depends(current_user)):
     dialog(did, user)
     enforce_limits(user)
     msgs = [
-        m for m in rpc(user['profile'], 'session.history', {'session_id': live(did, user)}).get('messages', []) if m.get('role') == 'user'
+        m
+        for m in rpc(user['profile'], 'session.history', {'session_id': live(did, user)}).get('messages', [])
+        if m.get('role') == 'user' and not _is_notice(m)
     ]
     texts = []
     for m in msgs:
@@ -3273,6 +3280,21 @@ def create_dialog(body: NewDialog, user=Depends(current_user)):
             ),
         )
     return {'id': did, 'title': title or UNTITLED, 'title_source': 'user' if title else 'auto', 'runtime': chat_runtime(rt)}
+
+
+# Transcript notices Hermes itself stores as user-role rows (native desktop NOTICE_DISPLAY_KINDS): nobody typed
+# them, so they are never the user's words (UI renders them as system events; title/retry skip them).
+NOTICE_KINDS = {'process_complete', 'async_delegation_complete', 'auto_continue', 'model_switch', 'personality_switch'}
+_SYNTHETIC_USER = re.compile(
+    r'^\s*(?:\[IMPORTANT: Background process |\[ASYNC (?:DELEGATION )?(?:BATCH )?(?:TASK FAILED|COMPLETE)\b|'
+    r'A background fan-out of \d+ subagent\(s\) you dispatched earlier has finished\.|'
+    r'A background subagent you dispatched earlier has finished\.)',
+    re.I,
+)
+
+
+def _is_notice(m) -> bool:
+    return m.get('role') == 'user' and (m.get('display_kind') in NOTICE_KINDS or bool(_SYNTHETIC_USER.match(_visible_text(m))))
 
 
 def _visible_text(m):
@@ -3394,7 +3416,7 @@ def history(did: str, request: Request, tail: int | None = Query(None, ge=1, le=
         return {**result, 'hermes_row_count': result['count'], 'count': len(result.get('messages', []))}
     visible = [m for m in result.get('messages', []) if m.get('role') in ('user', 'assistant') and _visible_text(m).strip()]
     start = max(0, len(visible) - tail)
-    while start > 0 and visible[start].get('role') != 'user':
+    while start > 0 and (visible[start].get('role') != 'user' or _is_notice(visible[start])):
         start -= 1
     return _etagged(
         request,

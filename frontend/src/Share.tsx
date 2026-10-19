@@ -5,6 +5,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {api} from './Auth';
 import {Ic, X, ContentCopy, Check, Refresh, Trash2} from './Icons';
 import {Markdown} from './Markdown';
+import {parseNotice, SystemNotice} from './SystemNotice';
 import {toast} from './Feedback';
 import {shortTime} from './MessageItem';
 
@@ -145,7 +146,7 @@ type Shared = {
   owner: string;
   own: boolean;
   created: number;
-  messages: {role: string; text: string; timestamp?: number}[];
+  messages: {role: string; text: string; timestamp?: number; kind?: string}[];
   chars: number;
   approx_tokens: number;
   full_allowed: boolean;
@@ -222,15 +223,19 @@ export function SharedChat({token, onClose, onCopied}: {token: string; onClose: 
                   </p>
                 </div>
                 <section className="chat shared-transcript">
-                  {d.messages.map((m, i) => (
-                    <article key={i} className={m.role === 'user' ? 'user' : 'assistant'}>
-                      <label className={m.role === 'user' ? undefined : 'assistant-name-row'}>
-                        {m.role === 'user' ? (d.own ? 'ВИ' : d.owner.toUpperCase()) : 'SHROOM'}
-                        {m.timestamp && <time className="msg-time">{shortTime(m.timestamp)}</time>}
-                      </label>
-                      {m.role === 'user' ? <div>{m.text}</div> : <Markdown text={m.text} />}
-                    </article>
-                  ))}
+                  {d.messages.map((m, i) => {
+                    const n = parseNotice(m, m.text);
+                    if (n) return <SystemNotice key={i} n={n} />;
+                    return (
+                      <article key={i} className={m.role === 'user' ? 'user' : 'assistant'}>
+                        <label className={m.role === 'user' ? undefined : 'assistant-name-row'}>
+                          {m.role === 'user' ? (d.own ? 'ВИ' : d.owner.toUpperCase()) : 'SHROOM'}
+                          {m.timestamp && <time className="msg-time">{shortTime(m.timestamp)}</time>}
+                        </label>
+                        {m.role === 'user' ? <div>{m.text}</div> : <Markdown text={m.text} />}
+                      </article>
+                    );
+                  })}
                 </section>
               </div>
               <div className="shared-bar">

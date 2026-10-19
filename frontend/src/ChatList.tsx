@@ -299,7 +299,7 @@ export function ChatList({
             <span className="msg-hit-title">
               {m.title}
               <small>
-                {m.role === 'user' ? 'ви' : 'агент'}
+                {m.role === 'system' ? 'системне' : m.role === 'user' ? 'ви' : 'агент'}
                 {m.ts ? ' · ' + when(m.ts, now) : ''}
               </small>
             </span>

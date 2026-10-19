@@ -106,6 +106,20 @@ def search(a):
     rows = db.search_messages(
         str(a.get('q', ''))[:200], role_filter=['user', 'assistant'], limit=int(a.get('limit', 60)), sort=a.get('sort')
     )
+    # Hermes' own transcript notices (background process done etc.) are user-role rows nobody typed: report them as
+    # 'system' so the portal does not label them as the user's words.
+    kinds = {}
+    ids = [r['id'] for r in rows if r.get('role') == 'user' and isinstance(r.get('id'), int)]
+    if ids:
+        import sqlite3
+
+        con = sqlite3.connect(f'file:{db.db_path}?mode=ro', uri=True)
+        try:
+            q = 'SELECT id, display_kind FROM messages WHERE id IN (%s)' % ','.join('?' * len(ids))
+            kinds = dict(con.execute(q, ids).fetchall())
+        finally:
+            con.close()
+    notice = {'process_complete', 'async_delegation_complete', 'auto_continue', 'model_switch', 'personality_switch'}
     chains, out = {}, []
     for r in rows:
         sid = r.get('session_id')
@@ -120,7 +134,7 @@ def search(a):
             {
                 'session': sid,
                 'chain': chains[sid],
-                'role': r.get('role'),
+                'role': 'system' if kinds.get(r.get('id')) in notice else r.get('role'),
                 'snippet': (r.get('snippet') or '')[:400],
                 'ts': r.get('timestamp'),
             }

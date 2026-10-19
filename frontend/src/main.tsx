@@ -44,13 +44,23 @@ import {ModelSwitch, Runtime} from './ModelSwitch';
 const Artifacts = React.lazy(() => import('./Artifacts').then(m => ({default: m.Artifacts})));
 const Tasks = React.lazy(() => import('./Tasks').then(m => ({default: m.Tasks})));
 import {CronReport, parseReport} from './CronReport';
+import {parseNotice, SystemNotice} from './SystemNotice';
 import {LimitsBadge} from './Limits';
 import {initTheme, syncTheme} from './Theme';
 initTheme();
 import {ChatList, ChatSearch, ConfirmDelete, Dialog, ChatStatus} from './ChatList';
 import {AttachmentCards, FileCard} from './Attachments';
 type Attachment = FileCard & {id: string; size: number};
-type Message = {role?: string; text?: string; content?: unknown; type?: string; row_id?: number; timestamp?: number; files?: FileCard[]};
+type Message = {
+  role?: string;
+  text?: string;
+  content?: unknown;
+  type?: string;
+  row_id?: number;
+  timestamp?: number;
+  files?: FileCard[];
+  display_kind?: string;
+};
 function userMatches(ms: Message[], text: string) {
   return ms.filter(m => m.role === 'user' && content(m).trim().startsWith(text.slice(0, 200))).length;
 }
@@ -900,7 +910,7 @@ function App({user, onLogout}: {user: User; onLogout: () => void}) {
   const shown = messages.filter(m => ['user', 'assistant'].includes(m.role ?? '') && (content(m) || m.files?.length));
   const canEdit = user.role === 'admin' || !!perms['cmd:undo'],
     canRetry = user.role === 'admin' || !!perms['cmd:retry'];
-  const lastUserIdx = shown.reduce((a, m, i) => (m.role === 'user' && !parseReport(content(m)) ? i : a), -1);
+  const lastUserIdx = shown.reduce((a, m, i) => (m.role === 'user' && !parseReport(content(m)) && !parseNotice(m, content(m)) ? i : a), -1);
   function msgProps(i: number) {
     const m = shown[i],
       t = content(m),
@@ -1267,7 +1277,9 @@ function App({user, onLogout}: {user: User; onLogout: () => void}) {
           {!loadingChat &&
             shown.map((m, i) => {
               const r = m.role === 'user' ? parseReport(content(m)) : null;
-              return r ? <CronReport key={i} r={r} /> : <MessageItem key={m.row_id ?? i} {...msgProps(i)} />;
+              if (r) return <CronReport key={i} r={r} />;
+              const n = parseNotice(m, content(m));
+              return n ? <SystemNotice key={m.row_id ?? i} n={n} /> : <MessageItem key={m.row_id ?? i} {...msgProps(i)} />;
             })}
           {pending && !loadingChat && (
             <article className="user pending" aria-busy="true">
